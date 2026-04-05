@@ -101,9 +101,9 @@ http://127.0.0.1:8000/docs
 
 Use header:
 
-user_id: 1  → Admin
-user_id: 2  → Analyst
-user_id: 3  → Viewer
+- user_id: 1  → Admin
+- user_id: 2  → Analyst
+- user_id: 3  → Viewer
 
 ---
 
