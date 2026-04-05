@@ -3,12 +3,17 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.user import UserCreate, UserResponse, UserUpdate
 from app.services.user_service import create_user, get_users, update_user
+from app.core.deps import require_role
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @router.post("/", response_model=UserResponse)
-def create_new_user(user: UserCreate, db: Session = Depends(get_db)):
+def create_new_user(
+    user: UserCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_role(["admin"]))
+):
     return create_user(db, user)
 
 
@@ -18,7 +23,12 @@ def get_all_users(db: Session = Depends(get_db)):
 
 
 @router.patch("/{user_id}", response_model=UserResponse)
-def update_existing_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
+def update_existing_user(
+    user_id: int,
+    user: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_role(["admin"]))
+):
     updated_user = update_user(db, user_id, user)
     if not updated_user:
         raise HTTPException(status_code=404, detail="User not found")

@@ -3,12 +3,17 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.record import RecordCreate, RecordResponse, RecordUpdate
 from app.services.record_service import create_record, get_records, update_record, delete_record
+from app.core.deps import require_role
 
 router = APIRouter(prefix="/records", tags=["Records"])
 
 
 @router.post("/", response_model=RecordResponse)
-def create_new_record(record: RecordCreate, db: Session = Depends(get_db)):
+def create_new_record(
+    record: RecordCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_role(["admin"]))
+):
     return create_record(db, record)
 
 
@@ -16,13 +21,19 @@ def create_new_record(record: RecordCreate, db: Session = Depends(get_db)):
 def get_all_records(
     type: str = Query(None),
     category: str = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(require_role(["analyst", "admin"]))
 ):
     return get_records(db, type, category)
 
 
 @router.patch("/{record_id}", response_model=RecordResponse)
-def update_existing_record(record_id: int, record: RecordUpdate, db: Session = Depends(get_db)):
+def update_existing_record(
+    record_id: int,
+    record: RecordUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_role(["admin"]))
+):
     updated = update_record(db, record_id, record)
     if not updated:
         raise HTTPException(status_code=404, detail="Record not found")
@@ -30,7 +41,11 @@ def update_existing_record(record_id: int, record: RecordUpdate, db: Session = D
 
 
 @router.delete("/{record_id}")
-def delete_existing_record(record_id: int, db: Session = Depends(get_db)):
+def delete_existing_record(
+    record_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_role(["admin"]))
+):
     deleted = delete_record(db, record_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Record not found")
